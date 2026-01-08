@@ -21,6 +21,7 @@ from brainglobe_atlasapi.atlas_generation.validate_atlases import (
     validate_mesh_matches_image_extents,
     validate_metadata,
     validate_reference_image_pixels,
+    validate_unique_structure_acronyms,
 )
 from brainglobe_atlasapi.config import get_brainglobe_dir
 from brainglobe_atlasapi.core import AdditionalRefDict
@@ -457,3 +458,38 @@ def test_validate_metadata(atlas, metadata, expected_output, error_message):
             validate_metadata(atlas)
     else:
         assert validate_metadata(atlas) == expected_output
+
+
+def test_validate_unique_structure_acronyms_pass(atlas):
+    """Check that an atlas with unique acronyms passes validation.
+
+    Parameters
+    ----------
+    atlas : BrainGlobeAtlas
+        A valid BrainGlobeAtlas instance with unique acronyms.
+    """
+    assert validate_unique_structure_acronyms(atlas)
+
+
+def test_validate_unique_structure_acronyms_fail(atlas):
+    """Check that an atlas with duplicate acronyms fails validation.
+
+    Parameters
+    ----------
+    atlas : BrainGlobeAtlas
+        A BrainGlobeAtlas instance.
+    """
+    modified_structures = atlas.structures.copy()
+    first_key = next(iter(modified_structures))
+    second_key = list(modified_structures.keys())[1]
+    modified_structures[second_key] = modified_structures[second_key].copy()
+    modified_structures[second_key]["acronym"] = modified_structures[
+        first_key
+    ]["acronym"]
+    atlas.structures = modified_structures
+
+    with pytest.raises(
+        AssertionError,
+        match=r"Duplicate structure acronyms found: \[.*?\]",
+    ):
+        validate_unique_structure_acronyms(atlas)

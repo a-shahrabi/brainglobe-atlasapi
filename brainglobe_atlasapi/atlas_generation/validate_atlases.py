@@ -468,6 +468,44 @@ def validate_atlas_name(atlas: BrainGlobeAtlas):
     return True
 
 
+def validate_unique_structure_acronyms(atlas: BrainGlobeAtlas):
+    """Validate that all structure acronyms are unique.
+
+    Checks that no two structures in the atlas share the same acronym.
+
+    Parameters
+    ----------
+    atlas : BrainGlobeAtlas
+        The BrainGlobeAtlas object to validate.
+
+    Returns
+    -------
+    bool
+        True if all structure acronyms are unique.
+
+    Raises
+    ------
+    AssertionError
+        If any structure acronyms are duplicated, listing which acronyms
+        appear more than once.
+    """
+    acronyms = [
+        atlas.structures[structure]["acronym"]
+        for structure in atlas.structures
+    ]
+    if len(acronyms) != len(set(acronyms)):
+        seen = set()
+        duplicates = set()
+        for acronym in acronyms:
+            if acronym in seen:
+                duplicates.add(acronym)
+            seen.add(acronym)
+        raise AssertionError(
+            f"Duplicate structure acronyms found: {sorted(duplicates)}"
+        )
+    return True
+
+
 def validate_metadata(atlas: BrainGlobeAtlas):
     """Validate the atlas metadata.
 
@@ -524,6 +562,7 @@ def get_all_validation_functions():
         validate_reference_image_pixels,
         validate_annotation_symmetry,
         validate_atlas_name,
+        validate_unique_structure_acronyms,
     ]
 
 
@@ -589,6 +628,7 @@ if __name__ == "__main__":
         validate_reference_image_pixels,
         validate_annotation_symmetry,
         validate_atlas_name,
+        validate_unique_structure_acronyms,
     ]
 
     valid_atlases = []
